@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "GameplayTagContainer.h"
 #include "MomentumCharacter.generated.h"
 
 class UCameraComponent;
@@ -17,6 +18,13 @@ class PROJECTMOMENTUM_API AMomentumCharacter : public ACharacter
 
 public:
 	AMomentumCharacter(const FObjectInitializer& ObjectInitializer);
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Tags")
+	FGameplayTagContainer ActiveStateTags;
+	
+	void AddStateTag(const FGameplayTag& TagToAssign);
+	void RemoveStateTag(const FGameplayTag& TagToRemove);
+	bool HasStateTag(const FGameplayTag& TagToCheck) const;
 	
 	UPROPERTY(BlueprintReadOnly, Category = "Movement")
 	bool bWantsToSprint;

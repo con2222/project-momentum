@@ -37,6 +37,21 @@ AMomentumCharacter::AMomentumCharacter(const FObjectInitializer& ObjectInitializ
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 }
 
+void AMomentumCharacter::AddStateTag(const FGameplayTag& TagToAssign)
+{
+	ActiveStateTags.AddTag(TagToAssign);
+}
+
+void AMomentumCharacter::RemoveStateTag(const FGameplayTag& TagToRemove)
+{
+	ActiveStateTags.RemoveTag(TagToRemove);
+}
+
+bool AMomentumCharacter::HasStateTag(const FGameplayTag& TagToCheck) const
+{
+	return ActiveStateTags.HasTagExact(TagToCheck);
+}
+
 void AMomentumCharacter::BeginPlay()
 {
 	Super::BeginPlay();
