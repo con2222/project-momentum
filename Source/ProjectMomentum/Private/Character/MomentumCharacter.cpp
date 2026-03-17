@@ -110,6 +110,17 @@ void AMomentumCharacter::Look(const FInputActionValue& Value)
 void AMomentumCharacter::Jump()
 {
 	Super::Jump();
+	
+	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
+	
+	if (MomentumMovement && MomentumMovement->IsWallRunning())
+	{
+		MomentumMovement->DoWallJump();
+	}
+	else
+	{
+		Super::Jump();
+	}
 }
 
 void AMomentumCharacter::StopJumping()
@@ -120,10 +131,27 @@ void AMomentumCharacter::StopJumping()
 void AMomentumCharacter::SprintStarted()
 {
 	bWantsToSprint = true;
+	
+	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
+	
+	if (MomentumMovement)
+	{
+		if (MomentumMovement->IsFalling())
+		{
+			MomentumMovement->TryWallRun();
+		}
+	}
 }
 
 void AMomentumCharacter::SprintCompleted()
 {
 	bWantsToSprint = false;
+	
+	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
+	
+	if (MomentumMovement)
+	{
+		MomentumMovement->StopWallRun();
+	}
 }
 
