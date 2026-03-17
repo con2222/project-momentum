@@ -47,6 +47,24 @@ void AMomentumCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
+	
+	float TargetRoll = 0.f;
+	if (MomentumMovement && MomentumMovement->IsWallRunning())
+	{
+		if (MomentumMovement->GetCurrentWallSide() == EWallRunSide::Left)
+		{
+			TargetRoll = -MaxCameraTilt;
+		} 
+		else if (MomentumMovement->GetCurrentWallSide() == EWallRunSide::Right)
+		{
+			TargetRoll = MaxCameraTilt;
+		}
+	}
+	
+	FRotator CurrentCameraRotation = FollowCamera->GetRelativeRotation();
+	float NewRoll = FMath::FInterpTo(CurrentCameraRotation.Roll, TargetRoll, DeltaTime, CameraTiltSpeed);
+	FollowCamera->SetRelativeRotation(FRotator(CurrentCameraRotation.Pitch, CurrentCameraRotation.Yaw, NewRoll));
 }
 
 void AMomentumCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -81,6 +99,12 @@ void AMomentumCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 
 void AMomentumCharacter::Move(const FInputActionValue& Value)
 {
+	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
+	if (MomentumMovement && MomentumMovement->IsWallRunning())
+	{
+		return;
+	}
+	
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 	
 	if (Controller)

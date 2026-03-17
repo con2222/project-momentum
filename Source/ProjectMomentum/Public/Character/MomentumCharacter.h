@@ -37,6 +37,12 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Camera|WallRun")
+	float MaxCameraTilt = 15.f;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Camera|WallRun")
+	float CameraTiltSpeed = 10.0f;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> MoveAction;
 	

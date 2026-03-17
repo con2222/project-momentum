@@ -23,10 +23,16 @@ void UMomentumAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 	
 	if (MomentumCharacter)
 	{
-		FVector Velocity = MomentumCharacter->GetVelocity();
-		Velocity.Z = 0.f;
-		Speed = Velocity.Size();
+		if (UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(MomentumCharacter->GetCharacterMovement()))
+		{
+			FVector Velocity = MomentumCharacter->GetVelocity();
+			Velocity.Z = 0.f;
+			Speed = Velocity.Size();
 		
-		bIsFalling = MomentumCharacter->GetCharacterMovement()->IsFalling();
+			bIsFalling = MomentumMovement->IsFalling();
+			
+			bIsWallRunning = MomentumMovement->IsWallRunning();
+			WallRunSide = MomentumMovement->GetCurrentWallSide();
+		}
 	}
 }

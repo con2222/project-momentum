@@ -41,6 +41,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Movement|WallRun")
 	void DoWallJump();
 	
+	UFUNCTION(BlueprintCallable, Category = "Movement|WallRun")
+	EWallRunSide GetCurrentWallSide() const { return CurrentWallSide; }
+	
 protected:
 	
 	bool WallCheck(FHitResult& WallHit, bool bLeft);

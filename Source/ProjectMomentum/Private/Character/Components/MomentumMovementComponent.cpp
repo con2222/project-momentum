@@ -137,6 +137,8 @@ void UMomentumMovementComponent::StartWallRun(EWallRunSide Side, const FVector& 
 	
 	SetMovementMode(MOVE_Flying);
 	
+	bOrientRotationToMovement = false;
+	
 	GetWorld()->GetTimerManager().SetTimer(WallRunTimer, this, &UMomentumMovementComponent::StopWallRun, MaxWallRunTime, false);
 }
 
@@ -151,4 +153,6 @@ void UMomentumMovementComponent::StopWallRun()
 	GetWorld()->GetTimerManager().ClearTimer(WallRunTimer);
 	
 	SetMovementMode(MOVE_Falling);
+	
+	bOrientRotationToMovement = true;
 }
