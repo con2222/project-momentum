@@ -4,6 +4,7 @@
 #include "MomentumGameplayTags.h"
 #include "ChooserFunctionLibrary.h"
 #include "Character/Animation/MomentumAnimInstance.h"
+#include "Weapons/MomentumBaseWeapon.h"
 
 
 UCombatSystemComponent::UCombatSystemComponent()
@@ -22,6 +23,27 @@ void UCombatSystemComponent::BeginPlay()
 	if (MomentumCharacterOwner)
 	{
 		AnimInstance = Cast<UMomentumAnimInstance>(MomentumCharacterOwner->GetMesh()->GetAnimInstance());
+	}
+	
+	if (MomentumCharacterOwner)
+	{
+		if (DefaultWeaponClass)
+		{
+			FActorSpawnParameters SpawnParams;
+			SpawnParams.Owner = MomentumCharacterOwner;
+			SpawnParams.Instigator = MomentumCharacterOwner;
+			
+			EquippedWeapon = GetWorld()->SpawnActor<AMomentumBaseWeapon>(DefaultWeaponClass, MomentumCharacterOwner->GetActorLocation(), MomentumCharacterOwner->GetActorRotation(), SpawnParams);
+
+			if (EquippedWeapon)
+			{
+				EquippedWeapon->AttachToComponent(
+					MomentumCharacterOwner->GetMesh(), 
+					FAttachmentTransformRules::SnapToTargetNotIncludingScale, 
+					FName("WeaponSocket") 
+				);
+			}
+		}
 	}
 }
 

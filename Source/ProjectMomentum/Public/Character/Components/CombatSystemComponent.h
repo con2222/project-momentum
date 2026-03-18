@@ -8,6 +8,7 @@
 class UChooserTable;
 class AMomentumCharacter;
 class UMomentumAnimInstance;
+class AMomentumBaseWeapon;
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class PROJECTMOMENTUM_API UCombatSystemComponent : public UActorComponent
@@ -26,6 +27,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|State")
 	int32 ComboCount = 0;
 	
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Equipment")
+	TSubclassOf<AMomentumBaseWeapon> DefaultWeaponClass;
+	
 	void Attack();
 	bool CanAttack() const;
 	
@@ -37,6 +41,9 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
+	UPROPERTY(Transient)
+	TObjectPtr<AMomentumBaseWeapon> EquippedWeapon;
 	
 	UPROPERTY()
 	TObjectPtr<AMomentumCharacter> MomentumCharacterOwner;
