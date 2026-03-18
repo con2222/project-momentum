@@ -10,6 +10,8 @@ class USpringArmComponent;
 class UInputAction;
 class UInputComponent;
 struct FInputActionValue;
+class UMomentumMovementComponent;
+class UCombatSystemComponent;
 
 UCLASS()
 class PROJECTMOMENTUM_API AMomentumCharacter : public ACharacter
@@ -45,6 +47,14 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
+	virtual void PostInitializeComponents() override;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
+	TObjectPtr<UMomentumMovementComponent> MomentumMovementComponent;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat")
+	TObjectPtr<UCombatSystemComponent> CombatSystemComponent;
+	
 	UPROPERTY(EditDefaultsOnly, Category = "Camera|WallRun")
 	float MaxCameraTilt = 15.f;
 	
@@ -63,6 +73,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputAction> RunAction;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	TObjectPtr<UInputAction> AttackAction;
+	
 private:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -70,4 +83,5 @@ private:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FollowCamera;
+	
 };

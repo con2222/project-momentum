@@ -2,13 +2,24 @@
 
 #include "Character/Components/MomentumMovementComponent.h"
 
+#include "MomentumGameplayTags.h"
 #include "Character/MomentumCharacter.h"
+
+UMomentumMovementComponent::UMomentumMovementComponent()
+{
+	bWantsInitializeComponent = true;
+}
+
+void UMomentumMovementComponent::InitializeComponent()
+{
+	Super::InitializeComponent();
+	
+	MomentumCharacterOwner = Cast<AMomentumCharacter>(GetCharacterOwner());
+}
 
 float UMomentumMovementComponent::GetMaxSpeed() const
 {
 	float MaxSpeed = Super::GetMaxSpeed();
-	
-	AMomentumCharacter* MomentumCharacterOwner = Cast<AMomentumCharacter>(GetOwner());
 	
 	if (MomentumCharacterOwner && MomentumCharacterOwner->bWantsToSprint)
 	{
@@ -139,6 +150,11 @@ void UMomentumMovementComponent::StartWallRun(EWallRunSide Side, const FVector& 
 	
 	bOrientRotationToMovement = false;
 	
+	if (MomentumCharacterOwner)
+	{
+		MomentumCharacterOwner->AddStateTag(FMomentumGameplayTags::Get().State_Movement_WallRun);
+	}
+	
 	GetWorld()->GetTimerManager().SetTimer(WallRunTimer, this, &UMomentumMovementComponent::StopWallRun, MaxWallRunTime, false);
 }
 
@@ -153,6 +169,11 @@ void UMomentumMovementComponent::StopWallRun()
 	GetWorld()->GetTimerManager().ClearTimer(WallRunTimer);
 	
 	SetMovementMode(MOVE_Falling);
+	
+	if (MomentumCharacterOwner)
+	{
+		MomentumCharacterOwner->RemoveStateTag(FMomentumGameplayTags::Get().State_Movement_WallRun);
+	}
 	
 	bOrientRotationToMovement = true;
 }

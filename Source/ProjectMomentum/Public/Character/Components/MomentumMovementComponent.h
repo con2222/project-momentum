@@ -5,6 +5,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MomentumMovementComponent.generated.h"
 
+class AMomentumCharacter;
+
 /**
  * 
  */
@@ -22,6 +24,7 @@ class PROJECTMOMENTUM_API UMomentumMovementComponent : public UCharacterMovement
 {
 	GENERATED_BODY()
 public:
+	UMomentumMovementComponent();
 	
 	virtual float GetMaxSpeed() const override;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
@@ -45,6 +48,10 @@ public:
 	EWallRunSide GetCurrentWallSide() const { return CurrentWallSide; }
 	
 protected:
+	virtual void InitializeComponent() override;
+	
+	UPROPERTY(Transient)
+	TObjectPtr<AMomentumCharacter> MomentumCharacterOwner;
 	
 	bool WallCheck(FHitResult& WallHit, bool bLeft);
 	

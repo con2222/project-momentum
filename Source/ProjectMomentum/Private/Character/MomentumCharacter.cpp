@@ -8,6 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "InputAction.h"
+#include "Character/Components/CombatSystemComponent.h"
 #include "Character/Components/MomentumMovementComponent.h"
 
 
@@ -34,6 +35,8 @@ AMomentumCharacter::AMomentumCharacter(const FObjectInitializer& ObjectInitializ
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 	
+	CombatSystemComponent = CreateDefaultSubobject<UCombatSystemComponent>(FName("CombatSystemComponent"));
+	
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 }
 
@@ -58,20 +61,25 @@ void AMomentumCharacter::BeginPlay()
 	
 }
 
+void AMomentumCharacter::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	
+	MomentumMovementComponent = Cast<UMomentumMovementComponent>(GetCharacterMovement());
+}
+
 void AMomentumCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
 	
 	float TargetRoll = 0.f;
-	if (MomentumMovement && MomentumMovement->IsWallRunning())
+	if (MomentumMovementComponent && MomentumMovementComponent->IsWallRunning())
 	{
-		if (MomentumMovement->GetCurrentWallSide() == EWallRunSide::Left)
+		if (MomentumMovementComponent->GetCurrentWallSide() == EWallRunSide::Left)
 		{
 			TargetRoll = -MaxCameraTilt;
 		} 
-		else if (MomentumMovement->GetCurrentWallSide() == EWallRunSide::Right)
+		else if (MomentumMovementComponent->GetCurrentWallSide() == EWallRunSide::Right)
 		{
 			TargetRoll = MaxCameraTilt;
 		}
@@ -109,13 +117,16 @@ void AMomentumCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 			EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Started, this, &AMomentumCharacter::SprintStarted);
 			EnhancedInputComponent->BindAction(RunAction, ETriggerEvent::Completed, this, &AMomentumCharacter::SprintCompleted);
 		}
+		if (AttackAction)
+		{
+			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, CombatSystemComponent.Get(), &UCombatSystemComponent::Attack);
+		}
 	}
 }
 
 void AMomentumCharacter::Move(const FInputActionValue& Value)
 {
-	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
-	if (MomentumMovement && MomentumMovement->IsWallRunning())
+	if (MomentumMovementComponent && MomentumMovementComponent->IsWallRunning())
 	{
 		return;
 	}
@@ -150,11 +161,9 @@ void AMomentumCharacter::Jump()
 {
 	Super::Jump();
 	
-	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
-	
-	if (MomentumMovement && MomentumMovement->IsWallRunning())
+	if (MomentumMovementComponent && MomentumMovementComponent->IsWallRunning())
 	{
-		MomentumMovement->DoWallJump();
+		MomentumMovementComponent->DoWallJump();
 	}
 	else
 	{
@@ -171,13 +180,11 @@ void AMomentumCharacter::SprintStarted()
 {
 	bWantsToSprint = true;
 	
-	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
-	
-	if (MomentumMovement)
+	if (MomentumMovementComponent)
 	{
-		if (MomentumMovement->IsFalling())
+		if (MomentumMovementComponent->IsFalling())
 		{
-			MomentumMovement->TryWallRun();
+			MomentumMovementComponent->TryWallRun();
 		}
 	}
 }
@@ -186,11 +193,8 @@ void AMomentumCharacter::SprintCompleted()
 {
 	bWantsToSprint = false;
 	
-	UMomentumMovementComponent* MomentumMovement = Cast<UMomentumMovementComponent>(GetCharacterMovement());
-	
-	if (MomentumMovement)
+	if (MomentumMovementComponent)
 	{
-		MomentumMovement->StopWallRun();
+		MomentumMovementComponent->StopWallRun();
 	}
 }
-
