@@ -42,7 +42,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	
-	UPROPERTY(Transient)
+	UPROPERTY(Transient, BlueprintReadOnly)
 	TObjectPtr<AMomentumBaseWeapon> EquippedWeapon;
 	
 	UPROPERTY()
