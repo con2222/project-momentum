@@ -8,8 +8,13 @@
 #include "EnhancedInputComponent.h"
 #include "InputActionValue.h"
 #include "InputAction.h"
+#include "MomentumGameplayTags.h"
 #include "Character/Components/CombatSystemComponent.h"
 #include "Character/Components/MomentumMovementComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Interfaces/Interactable.h"
+#include "Weapons/MomentumBaseWeapon.h"
 
 
 AMomentumCharacter::AMomentumCharacter(const FObjectInitializer& ObjectInitializer)
@@ -40,25 +45,54 @@ AMomentumCharacter::AMomentumCharacter(const FObjectInitializer& ObjectInitializ
 	GetCharacterMovement()->MaxWalkSpeed = 400.f;
 }
 
+void AMomentumCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
+{
+	Super::OnMovementModeChanged(PrevMovementMode, PreviousCustomMode);
+	
+	EMovementMode CurrentMode = GetCharacterMovement()->MovementMode;
+	
+	if (CurrentMode == MOVE_Walking || CurrentMode == MOVE_NavWalking)
+	{
+		AddStateTag(FMomentumGameplayTags::Get().State_Movement_Grounded);
+		RemoveStateTag(FMomentumGameplayTags::Get().State_Movement_Airborne);
+	}  else if (CurrentMode == MOVE_Falling)
+	{
+		AddStateTag(FMomentumGameplayTags::Get().State_Movement_Airborne);
+		RemoveStateTag(FMomentumGameplayTags::Get().State_Movement_Grounded);
+	}
+}
+
 void AMomentumCharacter::AddStateTag(const FGameplayTag& TagToAssign)
 {
-	ActiveStateTags.AddTag(TagToAssign);
+	CharacterTags.AddTag(TagToAssign);
 }
 
 void AMomentumCharacter::RemoveStateTag(const FGameplayTag& TagToRemove)
 {
-	ActiveStateTags.RemoveTag(TagToRemove);
+	CharacterTags.RemoveTag(TagToRemove);
 }
 
 bool AMomentumCharacter::HasStateTag(const FGameplayTag& TagToCheck) const
 {
-	return ActiveStateTags.HasTagExact(TagToCheck);
+	return CharacterTags.HasTag(TagToCheck);
+}
+
+bool AMomentumCharacter::HasStateTagExact(const FGameplayTag& TagToCheck) const
+{
+	return CharacterTags.HasTagExact(TagToCheck);
 }
 
 void AMomentumCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	CharacterTags.AddTag(FMomentumGameplayTags::Get().State_Movement_Grounded);
+	
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && UnarmedAnimLayer)
+	{
+		AnimInstance->LinkAnimClassLayers(UnarmedAnimLayer);
+	}
 }
 
 void AMomentumCharacter::PostInitializeComponents()
@@ -88,6 +122,63 @@ void AMomentumCharacter::Tick(float DeltaTime)
 	FRotator CurrentCameraRotation = FollowCamera->GetRelativeRotation();
 	float NewRoll = FMath::FInterpTo(CurrentCameraRotation.Roll, TargetRoll, DeltaTime, CameraTiltSpeed);
 	FollowCamera->SetRelativeRotation(FRotator(CurrentCameraRotation.Pitch, CurrentCameraRotation.Yaw, NewRoll));
+	
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+	
+	FHitResult Hit;
+	FVector TraceStart = FollowCamera->GetComponentLocation();
+	FVector TraceEnd = TraceStart + (FollowCamera->GetForwardVector() * SphereTraceRange);
+	
+	UKismetSystemLibrary::SphereTraceSingle(this, TraceStart, 
+		TraceEnd, 20, TraceTypeQuery3, false, ActorsToIgnore, 
+		EDrawDebugTrace::ForOneFrame, Hit, true, FLinearColor::Blue, FLinearColor::Red, 20.f);
+	
+	AActor* HitActor = Hit.GetActor();
+	if (HitActor && HitActor->Implements<UInteractable>())
+	{
+		float DistanceToItem = FVector::Dist(GetActorLocation(), HitActor->GetActorLocation());
+		
+		if (DistanceToItem <= InteractionDistance)
+		{
+			if (HitActor != CurrentInteractable)
+			{
+				if (CurrentInteractable)
+				{
+					IInteractable::Execute_StopLookingAt(CurrentInteractable);
+				}
+				
+				IInteractable::Execute_LookAt(HitActor);
+				CurrentInteractable = HitActor;
+			}
+		} else
+		{
+			if (CurrentInteractable)
+			{
+				IInteractable::Execute_StopLookingAt(CurrentInteractable);
+				CurrentInteractable = nullptr;
+			}
+		}
+		
+		IInteractable::Execute_LookAt(HitActor);
+		CurrentInteractable = HitActor;
+	} else
+	{
+		if (CurrentInteractable)
+		{
+			IInteractable::Execute_StopLookingAt(CurrentInteractable);
+			CurrentInteractable = nullptr;
+		}
+	}
+	
+	if (CurrentInteractable)
+	{
+		FString DebugMsg = FString::Printf(TEXT("Interact %s"), *CurrentInteractable->GetActorNameOrLabel());
+		GEngine->AddOnScreenDebugMessage(3, 5.f, FColor::Yellow, DebugMsg);
+	} else
+	{
+		GEngine->AddOnScreenDebugMessage(3, 5.f, FColor::Yellow, TEXT("Not Interact"));
+	}
 }
 
 void AMomentumCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -121,6 +212,14 @@ void AMomentumCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		{
 			EnhancedInputComponent->BindAction(AttackAction, ETriggerEvent::Started, CombatSystemComponent.Get(), &UCombatSystemComponent::Attack);
 		}
+		if (InteractAction)
+		{
+			EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AMomentumCharacter::Interact);
+		}
+		if (EquipAction)
+		{
+			EnhancedInputComponent->BindAction(EquipAction, ETriggerEvent::Started, this, &AMomentumCharacter::EquipWeapon);
+		}
 	}
 }
 
@@ -131,7 +230,18 @@ void AMomentumCharacter::Move(const FInputActionValue& Value)
 		return;
 	}
 	
+	if (HasStateTag(FGameplayTag::RequestGameplayTag(FName("State.Action")))) return;
+	
 	const FVector2D MovementVector = Value.Get<FVector2D>();
+	
+	if (!MovementVector.IsNearlyZero())
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && AnimInstance->Montage_IsPlaying(PickupMontage))
+		{
+			AnimInstance->Montage_Stop(0.25f, PickupMontage);
+		}
+	}
 	
 	if (Controller)
 	{
@@ -159,6 +269,8 @@ void AMomentumCharacter::Look(const FInputActionValue& Value)
 
 void AMomentumCharacter::Jump()
 {
+	if (HasStateTag(FGameplayTag::RequestGameplayTag(FName("State.Action")))) return;
+	
 	Super::Jump();
 	
 	if (MomentumMovementComponent && MomentumMovementComponent->IsWallRunning())
@@ -178,6 +290,7 @@ void AMomentumCharacter::StopJumping()
 
 void AMomentumCharacter::SprintStarted()
 {
+	if (HasStateTag(FGameplayTag::RequestGameplayTag(FName("State.Action")))) return;
 	bWantsToSprint = true;
 	
 	if (MomentumMovementComponent)
@@ -191,10 +304,73 @@ void AMomentumCharacter::SprintStarted()
 
 void AMomentumCharacter::SprintCompleted()
 {
+	if (HasStateTag(FGameplayTag::RequestGameplayTag(FName("State.Action")))) return;
 	bWantsToSprint = false;
 	
 	if (MomentumMovementComponent)
 	{
 		MomentumMovementComponent->StopWallRun();
+	}
+}
+
+void AMomentumCharacter::Interact()
+{
+	if (!CurrentInteractable || HasStateTag(FGameplayTag::RequestGameplayTag(FName("State.Action")))) return;
+	
+	float DistanceToItem = FVector::Dist(GetActorLocation(), CurrentInteractable->GetActorLocation());
+	if (CurrentInteractable && DistanceToItem < InteractionDistance)
+	{
+		CharacterTags.AddTag(FMomentumGameplayTags::Get().State_Action_Interact);
+		InteractableItem = CurrentInteractable;
+		IInteractable::Execute_Interact(InteractableItem, this);
+	}
+}
+
+void AMomentumCharacter::EquipWeapon()
+{
+	if (HasStateTag(FGameplayTag::RequestGameplayTag(FName("State.Action"))) || !HasStateTag(FMomentumGameplayTags::Get().State_Movement_Grounded) || CombatSystemComponent->WeaponsInventory.Num() == 0) return;
+	
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();	
+	if (CombatSystemComponent->WeaponsInventory.Num() > 0)
+	{
+		FWeaponData EquippedWeaponData = CombatSystemComponent->WeaponsInventory[0];
+		
+		if (!HasStateTag(FGameplayTag::RequestGameplayTag(FName("Weapon"))))
+		{
+			if (AnimInstance && EquippedWeaponData.EquipWeaponMontage)
+			{
+				AnimInstance->Montage_Play(EquippedWeaponData.EquipWeaponMontage);
+				AddStateTag(FMomentumGameplayTags::Get().State_Action_EquipWeapon);
+				AddStateTag(FMomentumGameplayTags::Get().State_Combat_Active);
+			}
+		} else
+		{
+			if (AnimInstance && EquippedWeaponData.UnEquipWeaponMontage)
+			{
+				AnimInstance->Montage_Play(EquippedWeaponData.UnEquipWeaponMontage);
+				AddStateTag(FMomentumGameplayTags::Get().State_Action_EquipWeapon);
+				RemoveStateTag(FMomentumGameplayTags::Get().State_Combat_Active);
+			}
+		}
+	}
+}
+
+void AMomentumCharacter::PrintActiveTags()
+{
+	FString TagsString = CharacterTags.ToStringSimple();
+	
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(1, 5.f, FColor::Cyan, FString::Printf(TEXT("Tags: %s"), *TagsString));
+	}
+}
+
+void AMomentumCharacter::ExecuteInteraction()
+{
+	if (InteractableItem)
+	{
+		RemoveStateTag(FMomentumGameplayTags::Get().State_Action_Interact);
+		CurrentInteractable = nullptr; 
+		InteractableItem = nullptr;
 	}
 }

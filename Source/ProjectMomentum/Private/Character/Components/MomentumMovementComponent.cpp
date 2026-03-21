@@ -103,7 +103,6 @@ void UMomentumMovementComponent::TryWallRun()
 
 	if (WallCheck(WallHit, false))
 	{
-		// Нашли стену справа! Запускаем Wall-run
 		StartWallRun(EWallRunSide::Right, WallHit.ImpactNormal);
 	}
 }

@@ -20,4 +20,29 @@ void FMomentumGameplayTags::InitializeNativeGameplayTags()
 		FName("State.Combat.Attacking"),
 		FString("Character is currently attacking")
 	);
+	
+	GameplayTags.State_Action_Interact = GameplayTagsManager.AddNativeGameplayTag(
+		FName("State.Action.Interact"),
+		FString("Character is currently Interact")
+	);
+	
+	GameplayTags.State_Action_EquipWeapon = GameplayTagsManager.AddNativeGameplayTag(
+		FName("State.Action.EquipWeapon"),
+		FString("EquipWeapon")
+	);
+	
+	GameplayTags.State_Movement_Grounded = GameplayTagsManager.AddNativeGameplayTag(
+		FName("State.Movement.Grounded"),
+		FString("Character is currently on Grounded")
+	);
+	
+	GameplayTags.State_Movement_Airborne = GameplayTagsManager.AddNativeGameplayTag(
+		FName("State.Movement.Airborne"),
+		FString("Character is currently in Airborne")
+	);
+	
+	GameplayTags.Weapon_Katana = GameplayTagsManager.AddNativeGameplayTag(
+		FName("Weapon.Katana"),
+		FString("Katana's tag")
+	);
 }

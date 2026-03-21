@@ -4,6 +4,7 @@
 #include "Character/Animation/MomentumAnimInstance.h"
 #include "Character/MomentumCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "KismetAnimationLibrary.h"
 
 void UMomentumAnimInstance::NativeInitializeAnimation()
 {
@@ -33,6 +34,8 @@ void UMomentumAnimInstance::NativeUpdateAnimation(float DeltaSeconds)
 			
 			bIsWallRunning = MomentumMovement->IsWallRunning();
 			WallRunSide = MomentumMovement->GetCurrentWallSide();
+			
+			Direction = UKismetAnimationLibrary::CalculateDirection(Velocity, MomentumCharacter->GetActorRotation());
 		}
 	}
 }
