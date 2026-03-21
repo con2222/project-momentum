@@ -77,3 +77,9 @@ DerivedDataCache/*
 .idea/
 Aura.uproject.DotSettings.user
 Platforms/
+
+Content/
+
+Content.rar
+
+ProjectMomentum.uproject.DotSettings.user
