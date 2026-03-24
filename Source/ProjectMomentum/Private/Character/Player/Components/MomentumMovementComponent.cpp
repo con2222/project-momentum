@@ -1,9 +1,9 @@
 
 
-#include "Character/Components/MomentumMovementComponent.h"
+#include "Character/Player/Components/MomentumMovementComponent.h"
 
 #include "MomentumGameplayTags.h"
-#include "Character/MomentumCharacter.h"
+#include "Character/Player/MomentumCharacter.h"
 
 UMomentumMovementComponent::UMomentumMovementComponent()
 {

@@ -1,7 +1,7 @@
 
 #include "Core/MomentumGameModeBase.h"
 
-#include "Character/MomentumCharacter.h"
+#include "Character/Player/MomentumCharacter.h"
 #include "Core/MomentumPlayerController.h"
 #include "Core/MomentumGameStateBase.h"
 #include "Core/MomentumPlayerState.h"

@@ -1,9 +1,9 @@
 ﻿
-#include "Character/Components/CombatSystemComponent.h"
-#include "Character/MomentumCharacter.h"
+#include "Character/Player/Components/CombatSystemComponent.h"
+#include "Character/Player/MomentumCharacter.h"
 #include "MomentumGameplayTags.h"
 #include "ChooserFunctionLibrary.h"
-#include "Character/Animation/MomentumAnimInstance.h"
+#include "Character/Player/Animation/MomentumAnimInstance.h"
 #include "Weapons/MomentumBaseWeapon.h"
 
 

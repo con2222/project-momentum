@@ -45,4 +45,9 @@ void FMomentumGameplayTags::InitializeNativeGameplayTags()
 		FName("Weapon.Katana"),
 		FString("Katana's tag")
 	);
+	
+	GameplayTags.State_Combat_Active = GameplayTagsManager.AddNativeGameplayTag(
+		FName("State.Combat.Active"),
+		FString("Character is currently in combat")
+	);
 }

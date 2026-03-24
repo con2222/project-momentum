@@ -1,8 +1,8 @@
 
 
 
-#include "Character/Animation/MomentumAnimInstance.h"
-#include "Character/MomentumCharacter.h"
+#include "Character/Player/Animation/MomentumAnimInstance.h"
+#include "Character/Player/MomentumCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
 

@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
-#include "Character/Components/MomentumMovementComponent.h"
+#include "Character/Player/Components/MomentumMovementComponent.h"
 #include "MomentumAnimInstance.generated.h"
 
 class AMomentumCharacter;

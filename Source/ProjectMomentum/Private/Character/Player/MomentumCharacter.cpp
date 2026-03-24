@@ -1,5 +1,5 @@
 
-#include "Character/MomentumCharacter.h"
+#include "Character/Player/MomentumCharacter.h"
 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -9,8 +9,8 @@
 #include "InputActionValue.h"
 #include "InputAction.h"
 #include "MomentumGameplayTags.h"
-#include "Character/Components/CombatSystemComponent.h"
-#include "Character/Components/MomentumMovementComponent.h"
+#include "Character/Player/Components/CombatSystemComponent.h"
+#include "Character/Player/Components/MomentumMovementComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Interfaces/Interactable.h"

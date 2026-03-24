@@ -2,8 +2,8 @@
 
 
 #include "Weapons/MomentumBaseWeapon.h"
-#include "Character/MomentumCharacter.h"
-#include "Character/Components/CombatSystemComponent.h"
+#include "Character/Player/MomentumCharacter.h"
+#include "Character/Player/Components/CombatSystemComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
